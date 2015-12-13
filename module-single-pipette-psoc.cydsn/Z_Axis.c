@@ -16,6 +16,7 @@
 CY_ISR(Z_Axis_Bumper_ISR);
 CY_ISR(Z_Axis_Move_ISR);
 void Z_Axis_Bumper_Stops();
+void Move_Up(uint16 distance);
 
 /*---- State Machine definition ----*/
 #define WAITING_FOR_BUMPER1 0
@@ -102,7 +103,6 @@ void Z_Axis_Init()
     
     Z_Axis_Direction_Write(motor_direction);
     Z_Axis_Enable_Write(0);
-    Z_axis_state = WAITING_FOR_BUMPER1;
     Z_Axis_Home();
 }
 
@@ -110,9 +110,8 @@ void Z_Axis_Home() {
     //Verifies if already on bumper, otherwise gets to bumper
     if (!(Z_Axis_Bumper_Port_Read())){
         // Activate motor to get to bumper
-        Z_Axis_Direction_Write(motor_up);
-        Z_Step_Dist_WriteCompare(max_distance*((motor_steps_turn*f_ustepping)/screw_lead));
-        Z_GO_Write(1); //Motor starts
+        Z_axis_state = WAITING_FOR_BUMPER1;
+        Move_Up(max_distance);
     }
     else {
         sendDataToCAN(CAN_INSTRUCTION_SET_Z_AXIS_HOME, CAN_DEVICE_ID, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00);
@@ -210,7 +209,7 @@ CY_ISR(Z_Axis_Move_ISR){
         {
             // Calls back for homing
             Z_axis_state = WAITING_FOR_BUMPER2;
-            Z_Axis_Home();
+            Move_Up(max_distance);
             break;
         }
         
@@ -231,5 +230,11 @@ CY_ISR(Z_Axis_Move_ISR){
         }
     }
     Z_Axis_Move_ISR_StartEx(Z_Axis_Move_ISR);
+}
+
+void Move_Up(uint16 distance){
+    Z_Axis_Direction_Write(motor_up);
+    Z_Step_Dist_WriteCompare(distance*((motor_steps_turn*f_ustepping)/screw_lead));
+    Z_GO_Write(1); //Motor starts
 }
 /* [] END OF FILE */
