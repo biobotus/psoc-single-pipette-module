@@ -148,6 +148,7 @@ void Z_Axis_Bumper_Stops()
             Z_Step_Dist_WriteCompare(0);
             Z_pos = 0;
             sendDataToCAN(CAN_INSTRUCTION_SET_Z_AXIS_HOME, CAN_DEVICE_ID, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00);
+            Z_Axis_Move_ISR_ClearPending();
             Z_axis_state = HOME;
             break;
         }
